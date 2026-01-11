@@ -1,0 +1,352 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Registro de Establecimientos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* Fondo con imagen */
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #1f2937;
+      min-height: 100vh;
+      background: url("https://images.pexels.com/videos/25955841/colombia-cundinamarca-flowers-25955841.jpeg") center/cover no-repeat fixed;
+    }
+    .overlay {
+      background: rgba(0, 0, 0, 0.35);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 880px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(90deg, #0ea5e9, #2563eb);
+      color: #fff;
+      padding: 18px 24px;
+    }
+    .card-header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .card-body {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    input[type="text"],
+    input[type="number"] {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+      outline: none;
+      transition: border-color 160ms ease;
+      background: #fafafa;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      border-color: #2563eb;
+      background: #fff;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.96rem;
+      font-weight: 600;
+      transition: transform 80ms ease, box-shadow 160ms ease, opacity 120ms ease;
+    }
+    button.primary {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+    }
+    button.secondary {
+      background: #0ea5e9;
+      color: white;
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    button:hover:not(:disabled) { transform: translateY(-1px); }
+    .status {
+      font-size: 0.92rem;
+      color: #374151;
+      min-height: 20px;
+    }
+    .status.error { color: #b91c1c; }
+    .status.success { color: #166534; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      width: 92%;
+      max-width: 520px;
+      padding: 20px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    }
+    .modal h2 { margin-top: 0; font-size: 1.1rem; }
+    .modal .modal-actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* Apariencia de campos bloqueados */
+    .locked {
+      background: #f3f4f6;
+      color: #6b7280;
+      border-color: #d1d5db;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="card">
+      <div class="card-header">
+        <h1>Registro de Establecimientos</h1>
+      </div>
+
+      <div class="card-body">
+        <form id="formRegistro" autocomplete="on">
+          <div class="grid-2">
+            <div class="field">
+              <label for="nombre">Nombre del establecimiento</label>
+              <input id="nombre" name="nombre" type="text" placeholder="Ej: Bar Central" required />
+            </div>
+
+            <div class="field">
+              <label for="direccion">Dirección del establecimiento</label>
+              <input id="direccion" name="direccion" type="text" placeholder="Ej: Calle 10 # 15-25" required />
+            </div>
+          </div>
+
+          <!-- Coordenadas: solo dos campos -->
+          <div class="grid-2">
+            <div class="field">
+              <label for="latitud">Latitud (decimal)</label>
+              <input id="latitud" name="latitud" type="text" placeholder="Usa el botón Mi ubicación" readonly class="locked" />
+            </div>
+            <div class="field">
+              <label for="longitud">Longitud (decimal)</label>
+              <input id="longitud" name="longitud" type="text" placeholder="Usa el botón Mi ubicación" readonly class="locked" />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="secondary" id="btnUbicacion">Mi ubicación</button>
+            <button type="submit" class="primary" id="btnEnviar">Enviar</button>
+          </div>
+
+          <div id="estado" class="status"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 id="modalTitle">Datos enviados correctamente</h2>
+      <p>Los datos se han registrado en el Excel. Presiona <strong>Aceptar</strong> para limpiar el formulario.</p>
+      <div class="modal-actions">
+        <button id="btnAceptar" class="primary">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const estadoEl = document.getElementById("estado");
+    const formEl = document.getElementById("formRegistro");
+    const btnUbicacion = document.getElementById("btnUbicacion");
+    const btnEnviar = document.getElementById("btnEnviar");
+
+    const latitudEl = document.getElementById("latitud");
+    const longitudEl = document.getElementById("longitud");
+
+    const modal = document.getElementById("modal");
+    const btnAceptar = document.getElementById("btnAceptar");
+
+    function showStatus(msg, kind = "info") {
+      estadoEl.textContent = msg;
+      estadoEl.className = "status " + (kind === "error" ? "error" : (kind === "success" ? "success" : ""));
+    }
+
+    function openModal() { modal.classList.add("show"); }
+    function closeModal() { modal.classList.remove("show"); }
+
+    function lockCoords() {
+      latitudEl.readOnly = true;
+      longitudEl.readOnly = true;
+      latitudEl.classList.add("locked");
+      longitudEl.classList.add("locked");
+    }
+    function unlockCoords() {
+      // En tu requerimiento, deben permanecer bloqueadas tras "Mi ubicación".
+      // Solo las desbloqueamos si quieres permitir limpieza manual completa.
+      latitudEl.readOnly = true;
+      longitudEl.readOnly = true;
+      latitudEl.classList.add("locked");
+      longitudEl.classList.add("locked");
+    }
+
+    // Botón "Mi ubicación"
+    btnUbicacion.addEventListener("click", () => {
+      estadoEl.textContent = "";
+      if (!("geolocation" in navigator)) {
+        showStatus("Tu navegador no soporta geolocalización.", "error");
+        return;
+      }
+      btnUbicacion.disabled = true;
+      showStatus("Obteniendo tu ubicación…");
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+
+          // Rellenar y bloquear
+          latitudEl.value = Number(latitude.toFixed(8));
+          longitudEl.value = Number(longitude.toFixed(8));
+          lockCoords();
+
+          showStatus("Ubicación capturada. Los campos han quedado bloqueados.", "success");
+          btnUbicacion.disabled = false;
+        },
+        (err) => {
+          let msg = "No fue posible obtener tu ubicación.";
+          if (err.code === 1) msg = "Permiso de ubicación denegado.";
+          if (err.code === 2) msg = "Posición no disponible.";
+          if (err.code === 3) msg = "Tiempo de espera agotado al obtener la ubicación.";
+          showStatus(msg, "error");
+          btnUbicacion.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    });
+
+    // Envío del formulario
+    formEl.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      estadoEl.textContent = "";
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const direccion = document.getElementById("direccion").value.trim();
+      const latitud = latitudEl.value;
+      const longitud = longitudEl.value;
+
+      if (!nombre || !direccion) {
+        showStatus("Por favor completa nombre y dirección.", "error");
+        return;
+      }
+      if (!latitud || !longitud) {
+        showStatus("Captura tu ubicación antes de enviar.", "error");
+        return;
+      }
+
+      const latNum = Number(latitud);
+      const lonNum = Number(longitud);
+      if (Number.isNaN(latNum) || Number.isNaN(lonNum)) {
+        showStatus("Las coordenadas no son válidas.", "error");
+        return;
+      }
+      if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+        showStatus("Rango inválido: Latitud (-90 a 90) y Longitud (-180 a 180).", "error");
+        return;
+      }
+
+      const payload = {
+        nombre,
+        direccion,
+        latitud: latNum,
+        longitud: lonNum,
+        timestamp: new Date().toISOString()
+      };
+
+      const FLOW_URL = "https://default6ced28707308471eaf1561b2f796b4.9c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7d9672b79a96436a82ca26c548d70564/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=M5nMy0TR8JWZ81ITW4f16c9fHmxItX21or4CvPqieJw";
+
+      btnEnviar.disabled = true;
+      showStatus("Enviando datos…");
+
+      try {
+        const res = await fetch(FLOW_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok && res.status !== 202) {
+          throw new Error(`Error HTTP ${res.status}`);
+        }
+
+        openModal();
+        showStatus("Datos enviados.", "success");
+      } catch (error) {
+        console.error(error);
+        showStatus("Error al enviar los datos. Revisa la conexión o CORS.", "error");
+      } finally {
+        btnEnviar.disabled = false;
+      }
+    });
+
+    // Botón "Aceptar": limpiar todo
+    btnAceptar.addEventListener("click", () => {
+      closeModal();
+      formEl.reset();
+      // Mantener bloqueados (como pediste); se vuelven a bloquear explícitamente
+      unlockCoords();
+      showStatus("");
+    });
+  </script>
+</body>
+</html>
